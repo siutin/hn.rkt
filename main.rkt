@@ -17,4 +17,14 @@
 (define (hw/api/topstories)
   (hw/base/api-get "/v0/topstories.json"))
 
-(hw/api/topstories)
+(define (hw/api/item id)
+  (hw/base/api-get (format "/v0/item/~a.json" id)))
+
+(define (hw/index)
+  (for ([item-id (in-list (hw/api/topstories))])
+    (displayln (hw/api/item item-id))))
+
+(hw/index)
+
+;;; (hw/topstories)
+;;; (hw/item 21534133)
