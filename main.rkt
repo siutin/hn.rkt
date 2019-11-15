@@ -28,7 +28,10 @@
     (hw/base/api-get (format "/v0/item/~a.json" id)))
 
   (define (hw/index)
-    (for ([item-id (in-list (take (hw/api/topstories) 5))])
-      (displayln (hw/api/item item-id))))
-
+    (let ([items (map
+                    (lambda (item-id)
+                          (future (lambda () (hw/api/item item-id))))
+                    (take (hw/api/topstories) 5))])
+      (for/async ([item items])
+        (displayln (touch item)))))
   (hw/index))
