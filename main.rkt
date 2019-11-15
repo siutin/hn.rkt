@@ -5,11 +5,17 @@
 
 (define (hw/base/api-get url)
   (define-values (status headers in)
-    (http-sendrecv
-      "hacker-news.firebaseio.com"
-      url
-      #:ssl? #t
-      #:method "GET"))        
+    (let ([hc (http-conn)])
+      (http-conn-open!
+            hc
+            "hacker-news.firebaseio.com"
+            #:ssl? #t
+            #:port 443
+            #:auto-reconnect? #t)
+      (http-conn-sendrecv!
+        hc      
+        (format "https://hacker-news.firebaseio.com/~a" url)
+        #:method "GET")))
   (let ([s (string->jsexpr (port->string in))])
     (close-input-port in)
     s))
