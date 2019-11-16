@@ -25,50 +25,48 @@
 (send frame-index-box set-column-width 1 120 100 120)
 (send frame-index-box set-column-width 2 50 50 80)
 
-(let ([hc (http-conn)])
-  (http-conn-open!
-    hc
-    "hacker-news.firebaseio.com"
-    #:ssl? #t
-    #:port 443
-    #:auto-reconnect? #t)
+(define hc (http-conn))
+(http-conn-open!
+  hc
+  "hacker-news.firebaseio.com"
+  #:ssl? #t
+  #:port 443
+  #:auto-reconnect? #t)
 
-  (define (hw/base/api-get url)
-    (define-values (status headers in)
-        (http-conn-sendrecv!
-          hc
-          (format "https://hacker-news.firebaseio.com/~a" url)
-          #:method "GET"))
-    (let ([s (string->jsexpr (port->string in))])
-      (close-input-port in)
-      s))
+(define (hw/base/api-get url)
+  (define-values (status headers in)
+      (http-conn-sendrecv!
+        hc
+        (format "https://hacker-news.firebaseio.com/~a" url)
+        #:method "GET"))
+  (let ([s (string->jsexpr (port->string in))])
+    (close-input-port in)
+    s))
 
-  (define (hw/api/topstories)
-    (hw/base/api-get "/v0/topstories.json"))
+(define (hw/api/topstories)
+  (hw/base/api-get "/v0/topstories.json"))
 
-  (define (hw/api/item id)
-    (hw/base/api-get (format "/v0/item/~a.json" id)))
+(define (hw/api/item id)
+  (hw/base/api-get (format "/v0/item/~a.json" id)))
 
-  (define (hw/index)
-    (map
-        (lambda (item-id)
-              (future (lambda () (hw/api/item item-id))))
-        (hw/api/topstories)))
+(define (hw/index)
+  (map
+      (lambda (item-id)
+            (future (lambda () (hw/api/item item-id))))
+      (hw/api/topstories)))
 
-  (begin
-    (date-display-format 'iso-8601)
-    (let* ([futures (take (hw/index) 5)]
-           [count 0])
-      (for/async ([f futures])
-        (let* ([item (touch f)]
-               [title (hash-ref item 'title "")]
-               [by (hash-ref item 'by "")]
-               [time (hash-ref item 'time "")]
-               [dt-str (date->string (seconds->date time))])
-          (send frame-index-box append title)
-          (send frame-index-box set-string count by 1)
-          (send frame-index-box set-string count dt-str 2)
-          (set! count (+ count 1))
-          (displayln (format "~a ~a ~a\n" title by time)))))))
-
-
+(begin
+  (date-display-format 'iso-8601)
+  (let* ([futures (take (hw/index) 5)]
+         [count 0])
+    (for/async ([f futures])
+      (let* ([item (touch f)]
+             [title (hash-ref item 'title "")]
+             [by (hash-ref item 'by "")]
+             [time (hash-ref item 'time "")]
+             [dt-str (date->string (seconds->date time))])
+        (send frame-index-box append title)
+        (send frame-index-box set-string count by 1)
+        (send frame-index-box set-string count dt-str 2)
+        (set! count (+ count 1))
+        (displayln (format "~a ~a ~a\n" title by time))))))
