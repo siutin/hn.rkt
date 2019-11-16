@@ -2,6 +2,13 @@
 
 (require net/http-client)
 (require json)
+(require racket/gui)
+
+(define frame (new frame%
+                   [label "Hacker News"]
+                   [width 1024]
+                   [height 600]))
+(send frame show #t)
 
 (let ([hc (http-conn)])
   (http-conn-open!
