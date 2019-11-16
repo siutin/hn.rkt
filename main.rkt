@@ -13,9 +13,7 @@
 (define (add-frame-list titles)
   (new list-box%
         (label #f)
-        (parent (new vertical-panel%
-                      (parent frame)
-                      (style (list 'border))))
+        (parent frame)
         (choices titles)
         (style (list 'single
                       'column-headers))
