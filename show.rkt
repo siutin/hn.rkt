@@ -13,6 +13,21 @@
                    [border 2]))
 (send frame show #t)
 
+(define text (new text%))
+(define canvas (new editor-canvas% [parent frame]
+                                   [editor text]
+                                   [style (list 'no-focus 'no-hscroll)]))
+
+(define style-delta (make-object style-delta%                                 
+                                 'change-normal-color))
+
+(define (add-frame-comment-box s)
+  (let* ([ss (string-split-by-length s #:size 100)])
+    (displayln (length ss))
+    (for/list ([t ss])
+      (send text change-style style-delta)
+      (send text insert (format "~a\n" t)))))
+
 (define (add-frame-message-box model parent-object)
   (let ([panel (new vertical-pane%
                   (parent parent-object)
@@ -83,6 +98,9 @@
              [data-title-or-text (if (non-empty-string? title)
                                      title
                                      data-text)])
+        (send text insert (format "@~a\n" by))
+        (add-frame-comment-box data-title-or-text)
+        (send text insert "----\n")
         (displayln (format "@~a\n" by))
         (displayln (format "#~a ~a ~a ~a ~a\n" time score descendants url kids))
         (for/list ([t (string-split-by-length data-text #:size 100)])
