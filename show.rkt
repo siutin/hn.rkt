@@ -4,6 +4,7 @@
 (require json)
 (require racket/gui)
 (require racket/date)
+(require "string-split.rkt")
 
 (define frame (new frame%
                    [label "Hacker News"]
@@ -57,25 +58,34 @@
   (hw/base/api-get (format "/v0/item/~a.json" id)))
 
 (define (hw/show item-id)
-  (future (lambda () (hw/api/item item-id))))
+  (let* ([item (hw/api/item item-id)]
+         [kids (hash-ref item 'kids empty)]
+         [childs (map
+                   (lambda (kid) (hw/api/item kid))
+                   kids)])
+    (append (list item) childs)))
 
 (begin
   (date-display-format 'iso-8601)
-  (let* ([f (hw/show 21534283)]
-         [item (touch f)]
-         [h (make-hasheq)]
-         [title (hash-ref item 'title "")]
-         [by (hash-ref item 'by "")]
-         [time (hash-ref item 'time "")]
-         [posted-at (date->string (seconds->date time))]
-         [score (hash-ref item 'score 0)]
-         [descendants (hash-ref item 'descendants 0)]
-         [url (hash-ref item 'url "")])
-      (hash-set! h 'title title)
-      (hash-set! h 'author by)
-      (hash-set! h 'posted-at posted-at)
-      (hash-set! h 'point score)
-      (hash-set! h 'coment-count descendants)
-      (hash-set! h 'url url)
-      (add-frame-message-box h frame)
-      (displayln (format "~a ~a ~a ~a ~a\n" title by time score descendants))))
+  (let* ([comments (hw/show 21534283)])
+    (for/list ([comment comments])
+      (let* ([item comment]
+             [h (make-hasheq)]
+             [title (hash-ref item 'title "")]
+             [by (hash-ref item 'by "")]
+             [time (hash-ref item 'time "")]
+             [posted-at (date->string (seconds->date time))]
+             [score (hash-ref item 'score 0)]
+             [descendants (hash-ref item 'descendants 0)]
+             [url (hash-ref item 'url "")]
+             [kids (hash-ref item 'kids '())]
+             [data-text (hash-ref item 'text "")]
+             [data-title-or-text (if (non-empty-string? title)
+                                     title
+                                     data-text)])
+        (displayln (format "@~a\n" by))
+        (displayln (format "#~a ~a ~a ~a ~a\n" time score descendants url kids))
+        (for/list ([t (string-split-by-length data-text #:size 100)])
+          (displayln (format ">~a\n" t)))))))
+
+      
