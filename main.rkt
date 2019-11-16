@@ -3,6 +3,7 @@
 (require net/http-client)
 (require json)
 (require racket/gui)
+(require racket/date)
 
 (define frame (new frame%
                    [label "Hacker News"]
@@ -18,10 +19,11 @@
         (choices frame-index-box-data)
         (style (list 'single
                       'column-headers))
-        (columns (list "Title" "Author"))))
+        (columns (list "Title" "Author" "Time"))))
 
-(send frame-index-box set-column-width 0 900 500 1024)
-(send frame-index-box set-column-width 1 100 100 150)
+(send frame-index-box set-column-width 0 800 500 824)
+(send frame-index-box set-column-width 1 120 100 120)
+(send frame-index-box set-column-width 2 50 50 80)
 
 (let ([hc (http-conn)])
   (http-conn-open!
@@ -54,15 +56,19 @@
         (hw/api/topstories)))
 
   (begin
+    (date-display-format 'iso-8601)
     (let* ([futures (take (hw/index) 5)]
            [count 0])
       (for/async ([f futures])
         (let* ([item (touch f)]
                [title (hash-ref item 'title "")]
-               [by (hash-ref item 'by "")])
+               [by (hash-ref item 'by "")]
+               [time (hash-ref item 'time "")]
+               [dt-str (date->string (seconds->date time))])
           (send frame-index-box append title)
           (send frame-index-box set-string count by 1)
+          (send frame-index-box set-string count dt-str 2)
           (set! count (+ count 1))
-          (displayln (format "~a ~a\n" title by)))))))
-      
+          (displayln (format "~a ~a ~a\n" title by time)))))))
+
 
