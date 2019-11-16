@@ -10,6 +10,17 @@
                    [height 600]))
 (send frame show #t)
 
+(define (add-frame-list titles)
+  (new list-box%
+        (label #f)
+        (parent (new vertical-panel%
+                      (parent frame)
+                      (style (list 'border))))
+        (choices titles)
+        (style (list 'single
+                      'column-headers))
+        (columns (list "List"))))
+
 (let ([hc (http-conn)])
   (http-conn-open!
     hc
