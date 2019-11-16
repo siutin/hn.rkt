@@ -10,14 +10,18 @@
                    [height 600]))
 (send frame show #t)
 
-(define (add-frame-list titles)
+(define frame-index-box-data empty)
+(define frame-index-box
   (new list-box%
         (label #f)
         (parent frame)
-        (choices titles)
+        (choices frame-index-box-data)
         (style (list 'single
                       'column-headers))
-        (columns (list "List"))))
+        (columns (list "Title" "Author"))))
+
+(send frame-index-box set-column-width 0 900 500 1024)
+(send frame-index-box set-column-width 1 100 100 150)
 
 (let ([hc (http-conn)])
   (http-conn-open!
@@ -51,11 +55,14 @@
 
   (begin
     (let* ([futures (take (hw/index) 5)]
-           [titles '()])
+           [count 0])
       (for/async ([f futures])
-        (let ([item (touch f)])
-          (set! titles (append titles (list (hash-ref item 'title))))))
-
-      (displayln titles)
-      (add-frame-list titles))))
+        (let* ([item (touch f)]
+               [title (hash-ref item 'title "")]
+               [by (hash-ref item 'by "")])
+          (send frame-index-box append title)
+          (send frame-index-box set-string count by 1)
+          (set! count (+ count 1))
+          (displayln (format "~a ~a\n" title by)))))))
+      
 
