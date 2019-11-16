@@ -19,11 +19,13 @@
         (choices frame-index-box-data)
         (style (list 'single
                       'column-headers))
-        (columns (list "Title" "Author" "Time"))))
+        (columns (list "Title" "Point" "Comment" "Author" "Time"))))
 
-(send frame-index-box set-column-width 0 800 500 824)
-(send frame-index-box set-column-width 1 120 100 120)
-(send frame-index-box set-column-width 2 50 50 80)
+(send frame-index-box set-column-width 0 650 500 824)
+(send frame-index-box set-column-width 1 70 70 70)
+(send frame-index-box set-column-width 2 80 80 80)
+(send frame-index-box set-column-width 3 120 100 120)
+(send frame-index-box set-column-width 4 50 50 80)
 
 (define hc (http-conn))
 (http-conn-open!
@@ -64,9 +66,14 @@
              [title (hash-ref item 'title "")]
              [by (hash-ref item 'by "")]
              [time (hash-ref item 'time "")]
-             [dt-str (date->string (seconds->date time))])
+             [dt-str (date->string (seconds->date time))]
+             [score (hash-ref item 'score 0)]
+             [descendants (hash-ref item 'descendants 0)])
+
         (send frame-index-box append title)
-        (send frame-index-box set-string count by 1)
-        (send frame-index-box set-string count dt-str 2)
+        (send frame-index-box set-string count (number->string score) 1)
+        (send frame-index-box set-string count (number->string descendants) 2)
+        (send frame-index-box set-string count by 3)
+        (send frame-index-box set-string count dt-str 4)
         (set! count (+ count 1))
-        (displayln (format "~a ~a ~a\n" title by time))))))
+        (displayln (format "~a ~a ~a ~a ~a\n" title by time score descendants))))))
