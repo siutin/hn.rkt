@@ -52,9 +52,12 @@
         (hw/api/topstories)))
 
   (begin
-    (let* ([futures (take (hw/index) 5)])
+    (let* ([futures (take (hw/index) 5)]
+           [titles '()])
       (for/async ([f futures])
         (let ([item (touch f)])
-          (displayln (format "~a | ~a"
-                        (hash-ref item 'title)
-                        (hash-ref item 'by))))))))
+          (set! titles (append titles (list (hash-ref item 'title))))))
+
+      (displayln titles)
+      (add-frame-list titles))))
+
